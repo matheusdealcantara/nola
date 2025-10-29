@@ -1,0 +1,24 @@
+{
+  "name": "nola-god-level",
+  "version": "1.0.0",
+  "description": "Donos de restaurantes gerenciam operações complexas através de múltiplos canais (presencial, iFood, Rappi, app próprio). Eles têm dados de **vendas, produtos, clientes e operações**, mas não conseguem extrair insights personalizados para tomar decisões de negócio.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/matheusdealcantara/nola.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "workspaces": [
+    "apps/*"
+  ],
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/matheusdealcantara/nola/issues"
+  },
+  "homepage": "https://github.com/matheusdealcantara/nola#readme"
+}

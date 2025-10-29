@@ -35,3 +35,23 @@ build/
 # OS
 Thumbs.db
 
+node_modules
+
+# --- Frontend (Next.js) ---
+# Pasta de build
+/apps/frontend/.next/
+/apps/frontend/out/
+
+# --- Backend (NestJS) ---
+# Pasta de build
+/apps/backend/dist/
+
+# --- Backend (Cube.js) ---
+# Cache e banco de dados temporário do Cube
+/apps/backend/.cubestore
+/apps/backend/cube.db
+
+# Virtual Environments
+.venv
+venv
+env
