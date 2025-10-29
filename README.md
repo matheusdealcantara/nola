@@ -68,7 +68,7 @@ Com:
 - Documento de decisões arquiteturais
 
 ## Suporte
-- 💬 **Discord**: https://discord.gg/z8pVH26j
+- 💬 **Discord**: https://discord.gg/pRwmm64Vej
 - 📧 **Email**: gsilvestre@arcca.io
 - 📧 **Telefone**: (11) 93016 - 3509
 
