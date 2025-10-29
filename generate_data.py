@@ -90,6 +90,8 @@ def setup_base_data(conn):
     # Sub-brands
     sub_brands = ['Challenge Burger', 'Challenge Pizza', 'Challenge Sushi']
     sub_brand_ids = []
+
+    cursor.execute("INSERT INTO brands (name) VALUES ('Nola God Level Brand')");
     for sb in sub_brands:
         cursor.execute(
             "INSERT INTO sub_brands (brand_id, name) VALUES (%s, %s) RETURNING id",
