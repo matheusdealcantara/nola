@@ -21,6 +21,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@babel/runtime": "^7.28.4",
     "@cubejs-backend/postgres-driver": "^1.5.0",
     "@cubejs-backend/server": "^1.5.0",
     "@cubejs-client/core": "^1.5.0",
