@@ -1,126 +1,135 @@
 cube(`sales`, {
   sql_table: `public.sales`,
-  
+
   data_source: `default`,
-  
+
   joins: {
     channels: {
       sql: `${CUBE}.channel_id = ${channels.id}`,
-      relationship: `many_to_one`
+      relationship: `many_to_one`,
     },
-    
+
     customers: {
       sql: `${CUBE}.customer_id = ${customers.id}`,
-      relationship: `many_to_one`
+      relationship: `many_to_one`,
     },
-    
+
     stores: {
       sql: `${CUBE}.store_id = ${stores.id}`,
-      relationship: `many_to_one`
+      relationship: `many_to_one`,
     },
-    
+
     sub_brands: {
       sql: `${CUBE}.sub_brand_id = ${sub_brands.id}`,
-      relationship: `many_to_one`
-    }
+      relationship: `many_to_one`,
+    },
   },
-  
+
   dimensions: {
     id: {
       sql: `id`,
       type: `number`,
-      primary_key: true
+      primary_key: true,
     },
-    
+
     cod_sale1: {
       sql: `cod_sale1`,
-      type: `string`
+      type: `string`,
     },
-    
+
     cod_sale2: {
       sql: `cod_sale2`,
-      type: `string`
+      type: `string`,
     },
-    
+
     customer_name: {
       sql: `customer_name`,
-      type: `string`
+      type: `string`,
     },
-    
+
     delivery_fee: {
       sql: `delivery_fee`,
-      type: `string`
+      type: `string`,
     },
-    
+
     discount_reason: {
       sql: `discount_reason`,
-      type: `string`
+      type: `string`,
     },
-    
+
     increase_reason: {
       sql: `increase_reason`,
-      type: `string`
+      type: `string`,
     },
-    
+
     origin: {
       sql: `origin`,
-      type: `string`
+      type: `string`,
     },
-    
+
     sale_status_desc: {
       sql: `sale_status_desc`,
-      type: `string`
+      type: `string`,
     },
-    
+
     service_tax_fee: {
       sql: `service_tax_fee`,
-      type: `string`
+      type: `string`,
     },
-    
-    total_amount: {
-      sql: `total_amount`,
-      type: `string`
-    },
-    
+
     total_amount_items: {
       sql: `total_amount_items`,
-      type: `string`
+      type: `string`,
     },
-    
-    total_discount: {
-      sql: `total_discount`,
-      type: `string`
-    },
-    
+
     total_increase: {
       sql: `total_increase`,
-      type: `string`
+      type: `string`,
     },
-    
-    value_paid: {
-      sql: `value_paid`,
-      type: `string`
-    },
-    
+
     created_at: {
       sql: `created_at`,
-      type: `time`
-    }
+      type: `time`,
+    },
   },
-  
+
   measures: {
     count: {
-      type: `count`
+      type: `count`,
     },
-    
+
     people_quantity: {
       sql: `people_quantity`,
-      type: `sum`
-    }
+      type: `sum`,
+    },
+
+    total_amount: {
+      sql: `CAST(${CUBE}.total_amount AS DECIMAL)`,
+      type: `sum`,
+      format: `currency`,
+    },
+
+    average_ticket: {
+      sql: `CAST(${CUBE}.total_amount AS DECIMAL)`,
+      type: `avg`,
+      format: `currency`,
+    },
+
+    total_discount: {
+      sql: `CAST(${CUBE}.total_discount AS DECIMAL)`,
+      type: `sum`,
+      format: `currency`,
+    },
+
+    value_paid: {
+      sql: `CAST(${CUBE}.value_paid AS DECIMAL)`,
+      type: `sum`,
+      format: `currency`,
+    },
   },
-  
+
   pre_aggregations: {
     // Pre-aggregation definitions go here.
     // Learn more in the documentation: https://cube.dev/docs/caching/pre-aggregations/getting-started
-  }
+  },
 });

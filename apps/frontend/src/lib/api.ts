@@ -72,12 +72,19 @@ export async function fetchOverviewMetrics(
   const params = buildQueryParams({ startDate, endDate });
   const url = `${API_BASE_URL}/analytics/overview${params ? `?${params}` : ""}`;
 
+  console.log("📡 API Request:", url);
+  console.log("📡 API_BASE_URL:", API_BASE_URL);
+
   const response = await fetch(url);
+  console.log("📡 Response status:", response.status);
+
   if (!response.ok) {
     throw new Error(`Failed to fetch overview metrics: ${response.statusText}`);
   }
 
-  return response.json();
+  const data = await response.json();
+  console.log("📡 Response data:", data);
+  return data;
 }
 
 /**
@@ -219,4 +226,24 @@ export async function fetchAnalyticsQuery(query: any): Promise<any> {
   }
 
   return response.json();
+}
+
+/**
+ * Fetch table counts for all data sources
+ */
+export async function fetchTableCounts(): Promise<Record<string, number>> {
+  const url = `${API_BASE_URL}/analytics/table-counts`;
+
+  console.log("📡 Fetching table counts from:", url);
+
+  const response = await fetch(url);
+  console.log("📡 Table counts response status:", response.status);
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch table counts: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  console.log("📡 Table counts data:", data);
+  return data;
 }

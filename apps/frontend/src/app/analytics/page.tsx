@@ -18,7 +18,11 @@ import {
   ChartIcon,
   SearchIcon,
 } from "@/components/ui/Icons";
-import { fetchOverviewMetrics, OverviewMetrics } from "@/lib/api";
+import {
+  fetchOverviewMetrics,
+  fetchTableCounts,
+  OverviewMetrics,
+} from "@/lib/api";
 
 interface DataSource {
   id: string;
@@ -35,8 +39,11 @@ export default function AnalyticsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [metrics, setMetrics] = useState<OverviewMetrics | null>(null);
+  const [tableCounts, setTableCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
+  const [loadingCounts, setLoadingCounts] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [countsError, setCountsError] = useState<string | null>(null);
 
   // Fetch overview metrics on mount and when timeframe changes
   useEffect(() => {
@@ -44,11 +51,15 @@ export default function AnalyticsPage() {
       try {
         setLoading(true);
         setError(null);
+        console.log("🔄 Fetching metrics from backend...");
         const data = await fetchOverviewMetrics();
+        console.log("✅ Metrics loaded:", data);
         setMetrics(data);
       } catch (err) {
-        console.error("Failed to fetch metrics:", err);
-        setError("Failed to load metrics data");
+        console.error("❌ Failed to fetch metrics:", err);
+        setError(
+          `Failed to load metrics data: ${err instanceof Error ? err.message : "Unknown error"}`
+        );
       } finally {
         setLoading(false);
       }
@@ -56,6 +67,29 @@ export default function AnalyticsPage() {
 
     loadMetrics();
   }, [selectedTimeFrame]);
+
+  // Fetch table counts on mount
+  useEffect(() => {
+    const loadTableCounts = async () => {
+      try {
+        setLoadingCounts(true);
+        setCountsError(null);
+        console.log("🔄 Fetching table counts from backend...");
+        const data = await fetchTableCounts();
+        console.log("✅ Table counts loaded:", data);
+        setTableCounts(data);
+      } catch (err) {
+        console.error("❌ Failed to fetch table counts:", err);
+        setCountsError(
+          `Failed to load table counts: ${err instanceof Error ? err.message : "Unknown error"}`
+        );
+      } finally {
+        setLoadingCounts(false);
+      }
+    };
+
+    loadTableCounts();
+  }, []);
 
   const dataSources: DataSource[] = [
     {
@@ -65,7 +99,7 @@ export default function AnalyticsPage() {
         "Análise completa de vendas, receitas, tickets médios e tendências",
       icon: <SalesIcon size={24} />,
       category: "Financeiro",
-      recordCount: 500000,
+      recordCount: tableCounts.sales || undefined,
       tags: ["receita", "vendas", "faturamento", "ticket médio"],
     },
     {
@@ -74,7 +108,7 @@ export default function AnalyticsPage() {
       description: "Performance de produtos, rankings, margens e popularidade",
       icon: <ProductIcon size={24} />,
       category: "Catálogo",
-      recordCount: 500,
+      recordCount: tableCounts.products || undefined,
       tags: ["produtos", "cardápio", "itens", "ranking"],
     },
     {
@@ -84,7 +118,7 @@ export default function AnalyticsPage() {
         "Detalhes de produtos em cada venda, quantidades e customizações",
       icon: <ProductIcon size={24} />,
       category: "Vendas",
-      recordCount: 1200000,
+      recordCount: tableCounts.product_sales || undefined,
       tags: ["produtos", "vendas", "customização"],
     },
     {
@@ -94,7 +128,7 @@ export default function AnalyticsPage() {
         "Perfil de clientes, frequência de compra, lifetime value e retenção",
       icon: <CustomerIcon size={24} />,
       category: "Clientes",
-      recordCount: 10000,
+      recordCount: tableCounts.customers || undefined,
       tags: ["clientes", "frequência", "fidelidade", "retenção"],
     },
     {
@@ -103,7 +137,7 @@ export default function AnalyticsPage() {
       description: "Performance por loja, comparações e análise geográfica",
       icon: <StoreIcon size={24} />,
       category: "Operacional",
-      recordCount: 50,
+      recordCount: tableCounts.stores || undefined,
       tags: ["lojas", "unidades", "performance", "localização"],
     },
     {
@@ -113,7 +147,7 @@ export default function AnalyticsPage() {
         "Análise de entregas, tempos, regiões e performance de entregadores",
       icon: <DeliveryIcon size={24} />,
       category: "Operacional",
-      recordCount: 200000,
+      recordCount: tableCounts.delivery_sales || undefined,
       tags: ["delivery", "entrega", "tempo", "logística"],
     },
     {
@@ -122,7 +156,7 @@ export default function AnalyticsPage() {
       description: "Performance por canal (presencial, iFood, Rappi, etc)",
       icon: <ChannelIcon size={24} />,
       category: "Vendas",
-      recordCount: 6,
+      recordCount: tableCounts.channels || undefined,
       tags: ["canais", "ifood", "rappi", "delivery", "presencial"],
     },
     {
@@ -131,7 +165,7 @@ export default function AnalyticsPage() {
       description: "Mix de pagamentos, métodos preferidos e análise financeira",
       icon: <PaymentIcon size={24} />,
       category: "Financeiro",
-      recordCount: 600000,
+      recordCount: tableCounts.payments || undefined,
       tags: ["pagamento", "pix", "cartão", "dinheiro"],
     },
     {
@@ -141,7 +175,7 @@ export default function AnalyticsPage() {
         "Análise de items adicionais, customizações e complementos mais vendidos",
       icon: <ProductIcon size={24} />,
       category: "Catálogo",
-      recordCount: 200,
+      recordCount: tableCounts.items || undefined,
       tags: ["complementos", "adicionais", "customização"],
     },
     {
@@ -151,7 +185,7 @@ export default function AnalyticsPage() {
         "Detalhes de customizações em produtos (adicionar, remover itens)",
       icon: <ChartIcon size={24} />,
       category: "Vendas",
-      recordCount: 800000,
+      recordCount: tableCounts.item_product_sales || undefined,
       tags: ["customização", "adicionais", "preferências"],
     },
   ];
@@ -238,6 +272,38 @@ export default function AnalyticsPage() {
       </header>
 
       <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Help Section */}
+        <section className="mb-12 bg-gradient-to-br from-white to-[#ECECEC] rounded-2xl border-2 border-[#ECECEC] p-8 shadow-lg">
+          <h3 className="text-xl font-bold text-[#8F4444] mb-4">
+            💡 Como começar?
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm text-[#8F4444]">
+            <div>
+              <div className="font-bold text-[#FD6263] mb-2 text-base">
+                1. Selecione uma fonte de dados
+              </div>
+              <p>
+                Clique em qualquer card abaixo para explorar os dados
+                disponíveis
+              </p>
+            </div>
+            <div>
+              <div className="font-bold text-[#FD6263] mb-2 text-base">
+                2. Escolha o período
+              </div>
+              <p>Ajuste o período de análise conforme sua necessidade</p>
+            </div>
+            <div>
+              <div className="font-bold text-[#FD6263] mb-2 text-base">
+                3. Crie visualizações
+              </div>
+              <p>
+                Construa gráficos e relatórios personalizados sem programação
+              </p>
+            </div>
+          </div>
+        </section>
+
         {/* Quick Metrics */}
         <section className="mb-8">
           <h2 className="text-2xl font-bold text-[#8F4444] mb-6 text-center">
@@ -328,9 +394,31 @@ export default function AnalyticsPage() {
               {filteredDataSources.length} fonte
               {filteredDataSources.length !== 1 ? "s" : ""} de dados
             </Badge>
+            {countsError && (
+              <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-3 text-center max-w-2xl">
+                <p className="text-yellow-700 text-sm font-medium">
+                  ⚠️ Usando dados de fallback - Database não conectado
+                </p>
+                <p className="text-yellow-600 text-xs mt-1">{countsError}</p>
+              </div>
+            )}
           </div>
 
-          {filteredDataSources.length === 0 ? (
+          {loadingCounts ? (
+            <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div
+                  key={i}
+                  className="bg-white rounded-3xl p-6 border-2 border-[#ECECEC]"
+                >
+                  <Skeleton className="h-8 w-8 mb-4 rounded-full" />
+                  <Skeleton className="h-6 w-32 mb-2" />
+                  <Skeleton className="h-4 w-full mb-4" />
+                  <Skeleton className="h-4 w-20" />
+                </div>
+              ))}
+            </div>
+          ) : filteredDataSources.length === 0 ? (
             <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
               <SearchIcon size={48} className="mx-auto text-[#6B7280] mb-4" />
               <h3 className="text-lg font-medium text-[#0F1114] mb-2">
@@ -355,37 +443,6 @@ export default function AnalyticsPage() {
               ))}
             </div>
           )}
-        </section>
-
-        {/* Help Section */}
-        <section className="mt-12 bg-gradient-to-br from-white to-[#ECECEC] rounded-2xl border-2 border-[#ECECEC] p-8 shadow-lg">
-          <h3 className="text-xl font-bold text-[#8F4444] mb-4">
-            💡 Como começar?
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm text-[#8F4444]">
-            <div>
-              <div className="font-bold text-[#FD6263] mb-2 text-base">
-                1. Selecione uma fonte de dados
-              </div>
-              <p>
-                Clique em qualquer card acima para explorar os dados disponíveis
-              </p>
-            </div>
-            <div>
-              <div className="font-bold text-[#FD6263] mb-2 text-base">
-                2. Escolha o período
-              </div>
-              <p>Ajuste o período de análise conforme sua necessidade</p>
-            </div>
-            <div>
-              <div className="font-bold text-[#FD6263] mb-2 text-base">
-                3. Crie visualizações
-              </div>
-              <p>
-                Construa gráficos e relatórios personalizados sem programação
-              </p>
-            </div>
-          </div>
         </section>
       </main>
     </div>

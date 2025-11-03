@@ -33,7 +33,7 @@ export class AnalyticsController {
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
     @Query('granularity') granularity?: string,
-  ) {
+  ): Promise<unknown> {
     return this.analyticsService.getSalesData(startDate, endDate, granularity);
   }
 
@@ -95,5 +95,13 @@ export class AnalyticsController {
     @Query('endDate') endDate?: string,
   ) {
     return this.analyticsService.getPaymentDistribution(startDate, endDate);
+  }
+
+  /**
+   * Get table counts for all data sources
+   */
+  @Get('table-counts')
+  async getTableCounts() {
+    return this.analyticsService.getTableCounts();
   }
 }
