@@ -1,38 +1,39 @@
 cube(`brands`, {
   sql_table: `public.brands`,
-  
-  data_source: `default`,
-  
+
   joins: {
-    
+    sub_brands: {
+      sql: `${CUBE}.id = ${sub_brands}.brand_id`,
+      relationship: `hasMany`,
+    },
   },
-  
+
   dimensions: {
     id: {
       sql: `id`,
       type: `number`,
-      primary_key: true
+      primary_key: true,
     },
-    
+
     name: {
       sql: `name`,
-      type: `string`
+      type: `string`,
     },
-    
+
     created_at: {
       sql: `created_at`,
-      type: `time`
-    }
+      type: `time`,
+    },
   },
-  
+
   measures: {
     count: {
-      type: `count`
-    }
+      type: `count`,
+    },
   },
-  
+
   pre_aggregations: {
     // Pre-aggregation definitions go here.
     // Learn more in the documentation: https://cube.dev/docs/caching/pre-aggregations/getting-started
-  }
+  },
 });

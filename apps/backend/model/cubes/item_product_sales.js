@@ -1,71 +1,71 @@
 cube(`item_product_sales`, {
   sql_table: `public.item_product_sales`,
-  
+
   data_source: `default`,
-  
+
   joins: {
     items: {
       sql: `${CUBE}.item_id = ${items.id}`,
-      relationship: `many_to_one`
+      relationship: `many_to_one`,
     },
-    
+
     option_groups: {
       sql: `${CUBE}.option_group_id = ${option_groups.id}`,
-      relationship: `many_to_one`
+      relationship: `many_to_one`,
     },
-    
+
     item_item_product_sales: {
       sql: `${CUBE}.product_sale_id = ${item_item_product_sales.id}`,
-      relationship: `many_to_one`
+      relationship: `many_to_one`,
     },
-    
+
     product_sales: {
       sql: `${CUBE}.product_sale_id = ${product_sales.id}`,
-      relationship: `many_to_one`
-    }
+      relationship: `many_to_one`,
+    },
   },
-  
+
   dimensions: {
     id: {
       sql: `id`,
       type: `number`,
-      primary_key: true
+      primary_key: true,
     },
-    
+
     observations: {
       sql: `observations`,
-      type: `string`
-    }
+      type: `string`,
+    },
   },
-  
+
   measures: {
     count: {
-      type: `count`
+      type: `count`,
     },
-    
+
     additional_price: {
       sql: `additional_price`,
-      type: `sum`
+      type: `sum`,
     },
-    
+
     amount: {
       sql: `amount`,
-      type: `sum`
+      type: `sum`,
     },
-    
+
     price: {
       sql: `price`,
-      type: `sum`
+      type: `sum`,
     },
-    
+
     quantity: {
       sql: `quantity`,
-      type: `sum`
-    }
+      type: `sum`,
+    },
   },
-  
+
   pre_aggregations: {
     // Pre-aggregation definitions go here.
     // Learn more in the documentation: https://cube.dev/docs/caching/pre-aggregations/getting-started
-  }
+  },
 });

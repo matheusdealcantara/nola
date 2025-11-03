@@ -22,9 +22,9 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.28.4",
-    "@cubejs-backend/postgres-driver": "^1.5.0",
-    "@cubejs-backend/server": "^1.5.0",
-    "@cubejs-client/core": "^1.5.0",
+    "@cubejs-backend/postgres-driver": "^0.35.21",
+    "@cubejs-backend/server": "^0.35.21",
+    "@cubejs-client/core": "^0.35.21",
     "@nestjs/common": "^11.0.1",
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",

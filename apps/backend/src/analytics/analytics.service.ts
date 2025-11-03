@@ -13,10 +13,6 @@ export class AnalyticsService {
       {
         // O NestJS (rodando na 3000) consulta o Cube (rodando na 4000)
         apiUrl: 'http://localhost:4000/cubejs-api/v1',
-        // Set shorter timeout (5 seconds) instead of 10 minutes
-        transport: {
-          timeout: 5000,
-        },
       },
     );
   }
@@ -235,31 +231,25 @@ export class AnalyticsService {
    */
   async getTableCounts() {
     try {
-      const queries = [
-        { cube: 'sales', measure: 'sales.count' },
-        { cube: 'products', measure: 'products.count' },
-        { cube: 'product_sales', measure: 'product_sales.count' },
-        { cube: 'customers', measure: 'customers.count' },
-        { cube: 'stores', measure: 'stores.count' },
-        { cube: 'delivery_sales', measure: 'delivery_sales.count' },
-        { cube: 'channels', measure: 'channels.count' },
-        { cube: 'payments', measure: 'payments.count' },
-        { cube: 'items', measure: 'items.count' },
-        { cube: 'item_product_sales', measure: 'item_product_sales.count' },
-      ];
+      const meta = await this.cubeApi.meta();
+      const cubes = meta.cubes;
 
       const results = await Promise.all(
-        queries.map(async ({ cube, measure }) => {
+        cubes.map(async (cube) => {
           try {
+            const measure = cube.measures[0]?.name || cube.dimensions[0]?.name;
+            if (!measure) {
+              return { cube: cube.name, count: 0 };
+            }
             const result = await this.cubeApi.load({ measures: [measure] });
             const data = result.tablePivot()[0];
             return {
-              cube,
+              cube: cube.name,
               count: parseInt(data?.[measure] || '0'),
             };
           } catch (error) {
-            console.error(`Error fetching count for ${cube}:`, error);
-            return { cube, count: 0 };
+            console.error(`Error fetching count for ${cube.name}:`, error);
+            return { cube: cube.name, count: 0 };
           }
         }),
       );

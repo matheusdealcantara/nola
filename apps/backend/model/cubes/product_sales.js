@@ -10,7 +10,7 @@ cube(`product_sales`, {
     },
 
     sales: {
-      sql: `${CUBE}.sale_id = ${sales.id}`,
+      sql: `${CUBE}.sale_id = ${sales}.id`,
       relationship: `many_to_one`,
     },
   },

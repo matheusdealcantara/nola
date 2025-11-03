@@ -1,36 +1,40 @@
 cube(`payment_types`, {
   sql_table: `public.payment_types`,
-  
+
   data_source: `default`,
-  
+
   joins: {
     brands: {
       sql: `${CUBE}.brand_id = ${brands.id}`,
-      relationship: `many_to_one`
-    }
+      relationship: `many_to_one`,
+    },
+    payments: {
+      sql: `${CUBE}.id = ${payments}.payment_type_id`,
+      relationship: `many_to_one`,
+    },
   },
-  
+
   dimensions: {
     id: {
       sql: `id`,
       type: `number`,
-      primary_key: true
+      primary_key: true,
     },
-    
+
     description: {
       sql: `description`,
-      type: `string`
-    }
+      type: `string`,
+    },
   },
-  
+
   measures: {
     count: {
-      type: `count`
-    }
+      type: `count`,
+    },
   },
-  
+
   pre_aggregations: {
     // Pre-aggregation definitions go here.
     // Learn more in the documentation: https://cube.dev/docs/caching/pre-aggregations/getting-started
-  }
+  },
 });
