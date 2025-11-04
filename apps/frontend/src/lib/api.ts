@@ -1,6 +1,123 @@
+import {
+  endOfDay,
+  endOfMonth,
+  format,
+  startOfDay,
+  startOfMonth,
+  startOfQuarter,
+  startOfYear,
+  subDays,
+  subMonths,
+} from "date-fns";
+
 // API utility functions for analytics endpoints
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+
+export type DateRangeSelection = string | [string, string];
+
+type DateRange = [string, string];
+
+const START_SUFFIX = "T00:00:00.000";
+const END_SUFFIX = "T23:59:59.999";
+
+const formatBoundary = (date: Date, boundary: "start" | "end"): string => {
+  const base = format(date, "yyyy-MM-dd");
+  return `${base}${boundary === "start" ? START_SUFFIX : END_SUFFIX}`;
+};
+
+const ensureBoundary = (value: string, boundary: "start" | "end"): string => {
+  if (value.includes("T")) {
+    return value;
+  }
+  return `${value}${boundary === "start" ? START_SUFFIX : END_SUFFIX}`;
+};
+
+const normalizeExplicitRange = (range: DateRange): DateRange => {
+  const [start, end] = range;
+  return [ensureBoundary(start, "start"), ensureBoundary(end, "end")];
+};
+
+const resolveRelativeRange = (value: string): DateRange | undefined => {
+  const now = new Date();
+
+  switch (value) {
+    case "today": {
+      const start = startOfDay(now);
+      const end = endOfDay(now);
+      return [formatBoundary(start, "start"), formatBoundary(end, "end")];
+    }
+    case "yesterday": {
+      const day = subDays(now, 1);
+      return [
+        formatBoundary(startOfDay(day), "start"),
+        formatBoundary(endOfDay(day), "end"),
+      ];
+    }
+    case "last_7_days": {
+      const start = startOfDay(subDays(now, 6));
+      const end = endOfDay(now);
+      return [formatBoundary(start, "start"), formatBoundary(end, "end")];
+    }
+    case "last_30_days": {
+      const start = startOfDay(subDays(now, 29));
+      const end = endOfDay(now);
+      return [formatBoundary(start, "start"), formatBoundary(end, "end")];
+    }
+    case "this_month": {
+      const start = startOfMonth(now);
+      const end = endOfDay(now);
+      return [formatBoundary(start, "start"), formatBoundary(end, "end")];
+    }
+    case "last_month": {
+      const lastMonthDate = subMonths(now, 1);
+      const start = startOfMonth(lastMonthDate);
+      const end = endOfMonth(lastMonthDate);
+      return [formatBoundary(start, "start"), formatBoundary(end, "end")];
+    }
+    case "this_quarter": {
+      const start = startOfQuarter(now);
+      const end = endOfDay(now);
+      return [formatBoundary(start, "start"), formatBoundary(end, "end")];
+    }
+    case "this_year": {
+      const start = startOfYear(now);
+      const end = endOfDay(now);
+      return [formatBoundary(start, "start"), formatBoundary(end, "end")];
+    }
+    default:
+      return undefined;
+  }
+};
+
+export const resolveDateRange = (
+  selection?: DateRangeSelection
+): DateRange | undefined => {
+  if (!selection) {
+    return undefined;
+  }
+
+  if (Array.isArray(selection)) {
+    return normalizeExplicitRange(selection);
+  }
+
+  return resolveRelativeRange(selection);
+};
+
+const buildDateParamsFromSelection = (selection?: DateRangeSelection) => {
+  const resolved = resolveDateRange(selection);
+
+  if (resolved) {
+    const [startDate, endDate] = resolved;
+    return { startDate, endDate };
+  }
+
+  if (typeof selection === "string") {
+    return { dateRange: selection };
+  }
+
+  return {};
+};
 
 export interface OverviewMetrics {
   totalSales: number;
@@ -49,10 +166,29 @@ export interface PaymentDistribution {
   "payments.total_amount": string;
 }
 
+export interface CubeJsMeta {
+  cubes: {
+    name: string;
+    title: string;
+    measures: {
+      name: string;
+      title: string;
+      type: string;
+    }[];
+    dimensions: {
+      name: string;
+      title: string;
+      type: string;
+    }[];
+  }[];
+}
+
 /**
  * Build query parameters
  */
-function buildQueryParams(params: Record<string, any>): string {
+type QueryParamValue = string | number | boolean | undefined;
+
+function buildQueryParams(params: Record<string, QueryParamValue>): string {
   const query = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null) {
@@ -66,10 +202,9 @@ function buildQueryParams(params: Record<string, any>): string {
  * Fetch overview metrics
  */
 export async function fetchOverviewMetrics(
-  startDate?: string,
-  endDate?: string
+  timeFrame?: DateRangeSelection
 ): Promise<OverviewMetrics> {
-  const params = buildQueryParams({ startDate, endDate });
+  const params = buildQueryParams(buildDateParamsFromSelection(timeFrame));
   const url = `${API_BASE_URL}/analytics/overview${params ? `?${params}` : ""}`;
 
   console.log("📡 API Request:", url);
@@ -91,11 +226,13 @@ export async function fetchOverviewMetrics(
  * Fetch sales data with time series
  */
 export async function fetchSalesData(
-  startDate?: string,
-  endDate?: string,
+  timeFrame?: DateRangeSelection,
   granularity: "day" | "week" | "month" = "day"
 ): Promise<SalesDataPoint[]> {
-  const params = buildQueryParams({ startDate, endDate, granularity });
+  const params = buildQueryParams({
+    ...buildDateParamsFromSelection(timeFrame),
+    granularity,
+  });
   const url = `${API_BASE_URL}/analytics/sales${params ? `?${params}` : ""}`;
 
   const response = await fetch(url);
@@ -110,11 +247,13 @@ export async function fetchSalesData(
  * Fetch product performance
  */
 export async function fetchProductPerformance(
-  startDate?: string,
-  endDate?: string,
+  timeFrame?: DateRangeSelection,
   limit: number = 10
 ): Promise<ProductPerformance[]> {
-  const params = buildQueryParams({ startDate, endDate, limit });
+  const params = buildQueryParams({
+    ...buildDateParamsFromSelection(timeFrame),
+    limit,
+  });
   const url = `${API_BASE_URL}/analytics/products${params ? `?${params}` : ""}`;
 
   const response = await fetch(url);
@@ -131,10 +270,9 @@ export async function fetchProductPerformance(
  * Fetch customer analytics
  */
 export async function fetchCustomerAnalytics(
-  startDate?: string,
-  endDate?: string
+  timeFrame?: DateRangeSelection
 ): Promise<CustomerAnalytics> {
-  const params = buildQueryParams({ startDate, endDate });
+  const params = buildQueryParams(buildDateParamsFromSelection(timeFrame));
   const url = `${API_BASE_URL}/analytics/customers${params ? `?${params}` : ""}`;
 
   const response = await fetch(url);
@@ -151,10 +289,9 @@ export async function fetchCustomerAnalytics(
  * Fetch store performance
  */
 export async function fetchStorePerformance(
-  startDate?: string,
-  endDate?: string
+  timeFrame?: DateRangeSelection
 ): Promise<StorePerformance[]> {
-  const params = buildQueryParams({ startDate, endDate });
+  const params = buildQueryParams(buildDateParamsFromSelection(timeFrame));
   const url = `${API_BASE_URL}/analytics/stores${params ? `?${params}` : ""}`;
 
   const response = await fetch(url);
@@ -171,10 +308,9 @@ export async function fetchStorePerformance(
  * Fetch channel distribution
  */
 export async function fetchChannelDistribution(
-  startDate?: string,
-  endDate?: string
+  timeFrame?: DateRangeSelection
 ): Promise<ChannelDistribution[]> {
-  const params = buildQueryParams({ startDate, endDate });
+  const params = buildQueryParams(buildDateParamsFromSelection(timeFrame));
   const url = `${API_BASE_URL}/analytics/channels${params ? `?${params}` : ""}`;
 
   const response = await fetch(url);
@@ -191,10 +327,9 @@ export async function fetchChannelDistribution(
  * Fetch payment distribution
  */
 export async function fetchPaymentDistribution(
-  startDate?: string,
-  endDate?: string
+  timeFrame?: DateRangeSelection
 ): Promise<PaymentDistribution[]> {
-  const params = buildQueryParams({ startDate, endDate });
+  const params = buildQueryParams(buildDateParamsFromSelection(timeFrame));
   const url = `${API_BASE_URL}/analytics/payments${params ? `?${params}` : ""}`;
 
   const response = await fetch(url);
@@ -210,7 +345,14 @@ export async function fetchPaymentDistribution(
 /**
  * Generic analytics query (for custom queries)
  */
-export async function fetchAnalyticsQuery(query: any): Promise<any> {
+export interface AnalyticsQueryResponse {
+  data: Record<string, string | number>[];
+  query: Record<string, unknown>;
+}
+
+export async function fetchAnalyticsQuery(
+  query: Record<string, unknown>
+): Promise<AnalyticsQueryResponse> {
   const url = `${API_BASE_URL}/analytics`;
 
   const response = await fetch(url, {
@@ -225,7 +367,16 @@ export async function fetchAnalyticsQuery(query: any): Promise<any> {
     throw new Error(`Failed to fetch analytics: ${response.statusText}`);
   }
 
-  return response.json();
+  const payload = (await response.json()) as Partial<AnalyticsQueryResponse>;
+
+  if (!payload?.data || !Array.isArray(payload.data)) {
+    throw new Error("Analytics response missing data array");
+  }
+
+  return {
+    data: payload.data,
+    query: (payload.query as Record<string, unknown>) ?? {},
+  };
 }
 
 /**
@@ -245,5 +396,24 @@ export async function fetchTableCounts(): Promise<Record<string, number>> {
 
   const data = await response.json();
   console.log("📡 Table counts data:", data);
+  return data;
+}
+
+/**
+ * Fetch Cube.js metadata
+ */
+export async function fetchCubeJsMeta(): Promise<CubeJsMeta> {
+  const url = `${API_BASE_URL}/analytics/meta`;
+  console.log("📡 Fetching Cube.js meta from:", url);
+
+  const response = await fetch(url);
+  console.log("📡 Cube.js meta response status:", response.status);
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch Cube.js meta: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  console.log("📡 Cube.js meta data:", data);
   return data;
 }

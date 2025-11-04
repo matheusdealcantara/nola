@@ -22,7 +22,9 @@ import {
   fetchOverviewMetrics,
   fetchTableCounts,
   OverviewMetrics,
+  DateRangeSelection,
 } from "@/lib/api";
+import { useRouter } from "next/navigation";
 
 interface DataSource {
   id: string;
@@ -35,7 +37,8 @@ interface DataSource {
 }
 
 export default function AnalyticsPage() {
-  const [selectedTimeFrame, setSelectedTimeFrame] = useState("last_30_days");
+  const [selectedTimeFrame, setSelectedTimeFrame] =
+    useState<DateRangeSelection>("last_30_days");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [metrics, setMetrics] = useState<OverviewMetrics | null>(null);
@@ -44,6 +47,7 @@ export default function AnalyticsPage() {
   const [loadingCounts, setLoadingCounts] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [countsError, setCountsError] = useState<string | null>(null);
+  const router = useRouter();
 
   // Fetch overview metrics on mount and when timeframe changes
   useEffect(() => {
@@ -52,7 +56,7 @@ export default function AnalyticsPage() {
         setLoading(true);
         setError(null);
         console.log("🔄 Fetching metrics from backend...");
-        const data = await fetchOverviewMetrics();
+        const data = await fetchOverviewMetrics(selectedTimeFrame);
         console.log("✅ Metrics loaded:", data);
         setMetrics(data);
       } catch (err) {
@@ -92,6 +96,15 @@ export default function AnalyticsPage() {
   }, []);
 
   const dataSources: DataSource[] = [
+    {
+      id: "relationships",
+      title: "Comparar Métricas",
+      description:
+        "Construa gráficos correlacionando métricas de diferentes esquemas",
+      icon: <ChartIcon size={24} />,
+      category: "Exploração",
+      tags: ["correlação", "comparação", "multidata", "insight"],
+    },
     {
       id: "sales",
       title: "Vendas",
@@ -212,7 +225,7 @@ export default function AnalyticsPage() {
 
   const handleDataSourceClick = (sourceId: string) => {
     console.log("Navigating to:", sourceId);
-    // TODO: Navigate to specific data source analysis page
+    router.push(`/analytics/${sourceId}`);
   };
 
   const quickMetrics = metrics
@@ -263,10 +276,6 @@ export default function AnalyticsPage() {
                 restaurante
               </p>
             </div>
-            <Button variant="primary">
-              <ChartIcon size={20} className="inline mr-2" />
-              Novo Relatório
-            </Button>
           </div>
         </div>
       </header>
@@ -344,7 +353,9 @@ export default function AnalyticsPage() {
           <div className="w-full max-w-md">
             <TimeFrameSelector
               onSelect={setSelectedTimeFrame}
-              defaultValue={selectedTimeFrame}
+              defaultValue={
+                Array.isArray(selectedTimeFrame) ? "custom" : selectedTimeFrame
+              }
             />
           </div>
         </section>

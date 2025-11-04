@@ -2,9 +2,9 @@ cube(`option_groups`, {
   sql_table: `public.option_groups`,
 
   joins: {
-    items: {
-      sql: `${CUBE}.id = ${items}.option_group_id`,
-      relationship: `hasMany`,
+    item_product_sales: {
+      sql: `${CUBE}.id = ${item_product_sales.option_group_id}`,
+      relationship: `one_to_many`,
     },
   },
 

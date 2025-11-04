@@ -21,7 +21,7 @@ cube(`items`, {
 
     item_item_product_sales: {
       sql: `${CUBE}.id = ${item_item_product_sales}.item_id`,
-      relationship: `many_to_one`,
+      relationship: `one_to_many`,
     },
   },
 
@@ -58,3 +58,4 @@ cube(`items`, {
     // Pre-aggregation definitions go here.
     // Learn more in the documentation: https://cube.dev/docs/caching/pre-aggregations/getting-started
   },
+});

@@ -1,6 +1,13 @@
 // Arquivo: apps/backend/src/analytics/analytics.controller.ts
 import { Controller, Post, Body, Get, Query } from '@nestjs/common';
 import { AnalyticsService } from './analytics.service';
+import type {
+  TimeDimensionGranularity,
+  Query as CubeQuery,
+} from '@cubejs-client/core';
+
+type DateRange = [string, string];
+type DateRangeInput = string | DateRange;
 
 @Controller('analytics')
 export class AnalyticsController {
@@ -10,8 +17,19 @@ export class AnalyticsController {
    * O frontend (Next.js) vai enviar suas queries para este endpoint
    */
   @Post()
-  loadAnalytics(@Body() query: any) {
+  loadAnalytics(@Body() query: CubeQuery) {
     return this.analyticsService.getAnalytics(query);
+  }
+
+  private getDateRange(
+    dateRange?: string,
+    startDate?: string,
+    endDate?: string,
+  ): DateRangeInput {
+    if (startDate && endDate) {
+      return [startDate, endDate];
+    }
+    return dateRange || 'last_30_days';
   }
 
   /**
@@ -19,10 +37,12 @@ export class AnalyticsController {
    */
   @Get('overview')
   async getOverview(
+    @Query('dateRange') dateRange?: string,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
   ) {
-    return this.analyticsService.getOverviewMetrics(startDate, endDate);
+    const range = this.getDateRange(dateRange, startDate, endDate);
+    return this.analyticsService.getOverviewMetrics(range);
   }
 
   /**
@@ -30,11 +50,13 @@ export class AnalyticsController {
    */
   @Get('sales')
   async getSales(
+    @Query('dateRange') dateRange?: string,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
-    @Query('granularity') granularity?: string,
+    @Query('granularity') granularity?: TimeDimensionGranularity,
   ): Promise<unknown> {
-    return this.analyticsService.getSalesData(startDate, endDate, granularity);
+    const range = this.getDateRange(dateRange, startDate, endDate);
+    return this.analyticsService.getSalesData(range, granularity);
   }
 
   /**
@@ -42,15 +64,13 @@ export class AnalyticsController {
    */
   @Get('products')
   async getProducts(
+    @Query('dateRange') dateRange?: string,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
     @Query('limit') limit?: number,
   ) {
-    return this.analyticsService.getProductPerformance(
-      startDate,
-      endDate,
-      limit,
-    );
+    const range = this.getDateRange(dateRange, startDate, endDate);
+    return this.analyticsService.getProductPerformance(range, limit);
   }
 
   /**
@@ -58,10 +78,12 @@ export class AnalyticsController {
    */
   @Get('customers')
   async getCustomers(
+    @Query('dateRange') dateRange?: string,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
   ) {
-    return this.analyticsService.getCustomerAnalytics(startDate, endDate);
+    const range = this.getDateRange(dateRange, startDate, endDate);
+    return this.analyticsService.getCustomerAnalytics(range);
   }
 
   /**
@@ -69,10 +91,12 @@ export class AnalyticsController {
    */
   @Get('stores')
   async getStores(
+    @Query('dateRange') dateRange?: string,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
   ) {
-    return this.analyticsService.getStorePerformance(startDate, endDate);
+    const range = this.getDateRange(dateRange, startDate, endDate);
+    return this.analyticsService.getStorePerformance(range);
   }
 
   /**
@@ -80,10 +104,12 @@ export class AnalyticsController {
    */
   @Get('channels')
   async getChannels(
+    @Query('dateRange') dateRange?: string,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
   ) {
-    return this.analyticsService.getChannelDistribution(startDate, endDate);
+    const range = this.getDateRange(dateRange, startDate, endDate);
+    return this.analyticsService.getChannelDistribution(range);
   }
 
   /**
@@ -91,10 +117,12 @@ export class AnalyticsController {
    */
   @Get('payments')
   async getPayments(
+    @Query('dateRange') dateRange?: string,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
   ) {
-    return this.analyticsService.getPaymentDistribution(startDate, endDate);
+    const range = this.getDateRange(dateRange, startDate, endDate);
+    return this.analyticsService.getPaymentDistribution(range);
   }
 
   /**
@@ -103,5 +131,13 @@ export class AnalyticsController {
   @Get('table-counts')
   async getTableCounts() {
     return this.analyticsService.getTableCounts();
+  }
+
+  /**
+   * Get Cube.js metadata
+   */
+  @Get('meta')
+  async getCubeJsMeta() {
+    return this.analyticsService.getCubeJsMeta();
   }
 }

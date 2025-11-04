@@ -15,8 +15,8 @@ cube(`item_product_sales`, {
     },
 
     item_item_product_sales: {
-      sql: `${CUBE}.product_sale_id = ${item_item_product_sales.id}`,
-      relationship: `many_to_one`,
+      sql: `${CUBE}.id = ${item_item_product_sales.item_product_sale_id}`,
+      relationship: `one_to_many`,
     },
 
     product_sales: {
